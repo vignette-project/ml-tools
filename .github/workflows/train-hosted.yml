@@ -1,0 +1,57 @@
+name: "Train Models - Hosted"
+on: push
+
+jobs:
+  train_headpose:
+     runs-on: windows-latest
+     steps:
+       - uses: actions/checkout@main
+
+       - name: Pull Dataset and extract
+         run: |
+           curl -L https://chinodesuuu.keybase.pub/ml_datasets/300W-LP.zip?dl=1 --output 300W-LP.zip
+           Expand-Archive .\300W-LP.zip .\Dataset\ 
+         working-directory: HeadPoseTraining
+         shell: pwsh
+
+       - name: Create Dataset
+         run: |
+          mkdir Dataset-Processed
+          pwsh tools\CreateDataset.ps1 -InputDirectory .\Dataset\300W-LP -TrainRate 8 -OutputDirectory .\Dataset\300W-LP
+         working-directory: HeadPoseTraining
+         shell: pwsh
+      
+       - name: Run .NET Build and copy DlibDotNetNative DLLs
+         run: |
+           dotnet build -c Release
+           curl -L https://cdn.discordapp.com/attachments/185253926147194880/758519958988390401/DlibDotNetDLLs.zip --output DlibDotNetDLLs.zip
+           Expand-Archive .\DlibDotNetDLLs.zip .\bin\Release\netcoreapp2.0\
+         working-directory: HeadPoseTraining
+         shell: pwsh
+      
+       - name: Execute Training 
+         run: |
+           dotnet run -c Release -- train --dataset .\Dataset\300W-LP ^
+                                 --gamma 0.1 ^
+                                 --tolerance 0.001 ^
+                                 --range 10 ^
+                                 --output .\Dataset\300W-LP\result\
+         working-directory: HeadPoseTraining
+
+       # This is to test if Model was properly trained.
+       - name: Perform Dataset Evaluation
+         run: |
+           dotnet run -c Release -- eval --image .\Dataset\300W-LP\AFW\AFW_134212_1_4.jpg ^
+                              --mat .\Dataset\300W-LP\AFW\AFW_134212_1_4.mat ^
+                              --landmark .\Dataset\300W-LP\landmarks\IBUG\IBUG_image_003_1_5_pts.mat ^
+                              --roll .\Dataset\300W-LP\result\300w-lp-roll-krls_0.001_0.1.dat ^
+                              --pitch .\Dataset\300W-LP\result\300w-lp-pitch-krls_0.001_0.1.dat ^
+                              --yaw .\Dataset\300W-LP\result\300w-lp-yaw-krls_0.001_0.1.dat ^
+                              --output .\Dataset\300W-LP\result\eval
+         working-directory: HeadPoseTraining 
+
+       - name: Upload Dataset results
+         uses: actions/upload-artifact@master
+         with:
+            name: dataset-300w-lp 
+            path: ./HeadPoseTraining/Dataset/300W-LP/result/
