@@ -16,7 +16,6 @@ jobs:
 
        - name: Create Dataset
          run: |
-          mkdir Dataset-Processed
           pwsh tools\CreateDataset.ps1 -InputDirectory .\Dataset\300W-LP -TrainRate 8 -OutputDirectory .\Dataset\300W-LP
          working-directory: HeadPoseTraining
          shell: pwsh
@@ -55,3 +54,10 @@ jobs:
          with:
             name: dataset-300w-lp 
             path: ./HeadPoseTraining/Dataset/300W-LP/result/
+
+       - name: Execute SSH Debug 
+         uses: mxschmitt/action-tmate@master
+         with:
+              sudo: true
+         if: ${{ job.status == 'failed' }}
+         timeout-minutes: 120
