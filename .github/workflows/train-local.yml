@@ -22,7 +22,7 @@ jobs:
               ./HeadPoseTraining/Dataset/
             key: ${{ runner.os }}-300wlp-${{ hashFiles('**/**.*') }}
             restore-keys: |
-              ${{ runner.os }}-dataset-
+              ${{ runner.os }}-300wlp-
 
        - name: .NET Restore
          run: dotnet restore 
@@ -82,7 +82,7 @@ jobs:
               ./HelenTraining/Datasets/
             key: ${{ runner.os }}-hln-${{ hashFiles('**/*.zip') }}
             restore-keys: |
-              ${{ runner.os }}-helen-
+              ${{ runner.os }}-hln-
 
        - name: Pull Datasets
          if: steps.cache.outputs.cache-hit != 'true'
