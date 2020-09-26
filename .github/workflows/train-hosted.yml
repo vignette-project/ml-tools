@@ -40,11 +40,8 @@ jobs:
          working-directory: HeadPoseTraining
          shell: pwsh
       
-       - name: Run .NET Build and copy DlibDotNetNative DLLs
-         run: |
-           dotnet build -c Release
-           curl -L https://chinodesuuu.keybase.pub/DlibDotNetDLLs.zip?dl=1 --output DlibDotNetDLLs.zip
-           Expand-Archive .\DlibDotNetDLLs.zip .\bin\Release\netcoreapp2.0\
+       - name: .NET Build 
+         run: dotnet build -c Release
          working-directory: HeadPoseTraining
          shell: pwsh
       
@@ -102,11 +99,8 @@ jobs:
        - name: .NET Restore
          run: dotnet restore 
 
-       - name: Run .NET Build and copy DlibDotNetNative DLLs
-         run: |
-           dotnet build -c Release
-           curl -L https://chinodesuuu.keybase.pub/DlibDotNetDLLs.zip?dl=1 --output DlibDotNetDLLs.zip
-           Expand-Archive .\DlibDotNetDLLs.zip .\bin\Release\netcoreapp2.0\
+       - name: .NET Build 
+         run: dotnet build -c Release
          working-directory: HelenTraining
          shell: pwsh
       
