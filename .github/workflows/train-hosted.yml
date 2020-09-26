@@ -13,7 +13,7 @@ jobs:
          with:
             path: |
               ./HeadPoseTraining/Dataset/
-            key: ${{ runner.os }}-dataset-${{ hashFiles('**/**.*') }}
+            key: ${{ runner.os }}-300wlp-${{ hashFiles('**/**.*') }}
             restore-keys: |
               ${{ runner.os }}-dataset-
 
@@ -88,25 +88,25 @@ jobs:
          with:
             path: |
               ./HelenTraining/Datasets/
-            key: ${{ runner.os }}-dataset-${{ hashFiles('**/*.zip') }}
+            key: ${{ runner.os }}-helen-${{ hashFiles('**/*.zip') }}
             restore-keys: |
-              ${{ runner.os }}-dataset-
+              ${{ runner.os }}-helen-
 
        - name: .NET Restore
          run: dotnet restore 
 
        - name: Pull Datasets
-#         if: steps.cache.outputs.cache-hit != 'true'
+         if: steps.cache.outputs.cache-hit != 'true'
          run: |
            mkdir Datasets
            cd Datasets
-           curl.exe -LJO -H "Accept: application/octet-stream" http://www.ifp.illinois.edu/~vuongle2/helen/data/annotation.zip --output annontation.zip --silent
-           curl.exe -LJO -H "Accept: application/octet-stream"  http://www.ifp.illinois.edu/~vuongle2/helen/data/helen_1.zip --output helen_1.zip --silent
-           curl.exe -LJO -H "Accept: application/octet-stream"  http://www.ifp.illinois.edu/~vuongle2/helen/data/helen_2.zip --output helen_2.zip --silent
-           curl.exe -LJO -H "Accept: application/octet-stream"  http://www.ifp.illinois.edu/~vuongle2/helen/data/helen_3.zip --output helen_3.zip --silent
-           curl.exe -LJO -H "Accept: application/octet-stream"  http://www.ifp.illinois.edu/~vuongle2/helen/data/helen_4.zip --output helen_4.zip --silent
-           curl.exe -LJO -H "Accept: application/octet-stream"  http://www.ifp.illinois.edu/~vuongle2/helen/data/helen_5.zip --output helen_5.zip --silent
-           curl.exe -LJO -H "Accept: application/octet-stream"  https://chinodesuuu.keybase.pub/ml_datasets/helen_predictors.zip?dl=1 --output helen_predictors.zip --silent
+           curl.exe -LJO -H "Accept: application/octet-stream" http://www.ifp.illinois.edu/~vuongle2/helen/data/annotation.zip --output annontation.zip 
+           curl.exe -LJO -H "Accept: application/octet-stream"  http://www.ifp.illinois.edu/~vuongle2/helen/data/helen_1.zip --output helen_1.zip 
+           curl.exe -LJO -H "Accept: application/octet-stream"  http://www.ifp.illinois.edu/~vuongle2/helen/data/helen_2.zip --output helen_2.zip 
+           curl.exe -LJO -H "Accept: application/octet-stream"  http://www.ifp.illinois.edu/~vuongle2/helen/data/helen_3.zip --output helen_3.zip 
+           curl.exe -LJO -H "Accept: application/octet-stream"  http://www.ifp.illinois.edu/~vuongle2/helen/data/helen_4.zip --output helen_4.zip 
+           curl.exe -LJO -H "Accept: application/octet-stream"  http://www.ifp.illinois.edu/~vuongle2/helen/data/helen_5.zip --output helen_5.zip 
+           curl.exe -LJO -H "Accept: application/octet-stream"  https://chinodesuuu.keybase.pub/ml_datasets/helen_predictors.zip?dl=1 --output helen_predictors.zip 
          working-directory: HelenTraining
          shell: pwsh
       
@@ -142,9 +142,9 @@ jobs:
 #            name: dataset-helen
 #            path: ./HelenTraining/models/
 
-       - name: Execute SSH Debug 
+       - name: Execute SSH Debug
+         if: ${{ failure() }} 
          uses: mxschmitt/action-tmate@master
          with:
               sudo: true
-         if: ${{ failure() }}
          timeout-minutes: 120
