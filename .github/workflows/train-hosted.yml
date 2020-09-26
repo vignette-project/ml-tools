@@ -113,17 +113,13 @@ jobs:
          run: dotnet run -c Release -- train -x "helen\helen-dataset.xml" -t 8
          working-directory: HelenTraining
 
-       - name: "DEBUG: Get dir contents of Datasets/"
-         run: |
-           dir Datasets
-           dir helen
-         working-directory: HelenTraining
-
-#       - name: Upload Dataset results
-#         uses: actions/upload-artifact@master
-#         with:
-#            name: dataset-helen
-#            path: ./HelenTraining/models/
+       - name: Upload Dataset results
+         uses: actions/upload-artifact@master
+         with:
+            name: dataset-helen
+            path: |
+              ./HelenTraining/models/
+              ./HelenTraining/helen/helen-dataset.dat
 
        - name: Execute SSH Debug
          if: ${{ failure() }} 

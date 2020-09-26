@@ -1,21 +1,21 @@
 name: "Train Models - Volunteer"
-on: 
-  schedule:
-      - cron:  '0 0 * * *'
+on: push 
+#  schedule:
+#      - cron:  '0 0 * * *'
 
 jobs:
   train_headpose:
-     runs-on: windows-latest
+     runs-on: self-hosted
      steps:
        - uses: actions/checkout@main
 
        - name: Restore Cache 
          uses: actions/cache@v2
-         id: cache-dataset
+         id: cache
          with:
             path: |
-              ./HeadPoseTraining/Datasets/
-            key: ${{ runner.os }}-dataset-${{ hashFiles('**/**.*') }}
+              ./HeadPoseTraining/Dataset/
+            key: ${{ runner.os }}-300wlp-${{ hashFiles('**/**.*') }}
             restore-keys: |
               ${{ runner.os }}-dataset-
 
@@ -23,7 +23,7 @@ jobs:
          run: dotnet restore 
 
        - name: Pull Dataset and extract
-         if: steps.cache-dataset.cache-hit != 'true'
+         if: steps.cache.outputs.cache-hit != 'true'
          run: |
            curl -L https://chinodesuuu.keybase.pub/ml_datasets/300W-LP.zip?dl=1 --output 300W-LP.zip
            Expand-Archive .\300W-LP.zip .\Dataset\ 
@@ -31,7 +31,7 @@ jobs:
          shell: pwsh
 
        - name: Create Dataset
-         if: steps.cache-dataset.cache-hit != 'true'
+         if: steps.cache.outputs.cache-hit != 'true'
          run: |
           pwsh tools\CreateDataset.ps1 -InputDirectory .\Dataset\300W_LP -TrainRate 8 -OutputDirectory .\Dataset\300W-LP
          working-directory: HeadPoseTraining
@@ -46,24 +46,7 @@ jobs:
          shell: pwsh
       
        - name: Execute Training 
-         run: |
-           dotnet run -c Release -- train --dataset .\Dataset\300W-LP ^
-                                 --gamma 0.1 ^
-                                 --tolerance 0.001 ^
-                                 --range 10 ^
-                                 --output .\Dataset\300W-LP\result\
-         working-directory: HeadPoseTraining
-
-       # This is to test if Model was properly trained.
-       - name: Perform Dataset Evaluation
-         run: |
-           dotnet run -c Release -- eval --image .\Dataset\300W_LP\AFW\AFW_134212_1_4.jpg ^
-                              --mat .\Dataset\300W_LP\AFW\AFW_134212_1_4.mat ^
-                              --landmark .\Dataset\300W_LP\landmarks\IBUG\IBUG_image_003_1_5_pts.mat ^
-                              --roll .\Dataset\300W-LP\result\300w-lp-roll-krls_0.001_0.1.dat ^
-                              --pitch .\Dataset\300W-LP\result\300w-lp-pitch-krls_0.001_0.1.dat ^
-                              --yaw .\Dataset\300W-LP\result\300w-lp-yaw-krls_0.001_0.1.dat ^
-                              --output .\Dataset\300W-LP\result\eval
+         run: dotnet run -c Release -- train --dataset .\Dataset\300W-LP --gamma 0.1 --tolerance 0.001 --range 10 --output .\Dataset\300W-LP\result\
          working-directory: HeadPoseTraining
 
        - name: Upload Dataset results
@@ -72,17 +55,77 @@ jobs:
             name: dataset-300w-lp 
             path: ./HeadPoseTraining/Dataset/300W-LP/result/
 
-       - name: Cache dataset
-         uses: actions/cache@v2
-         id: cache-dataset-final
-         with:
-            path: |
-              ./HeadPoseTraining/Datasets/
-            key: ${{ runner.os }}-dataset-${{ hashFiles('**/**.*') }}
-
        - name: Execute SSH Debug 
          uses: mxschmitt/action-tmate@master
          with:
               sudo: true
          if: ${{ failure() }}
+         timeout-minutes: 120
+
+  train_helen:
+     runs-on: self-hosted
+     steps:
+       - uses: actions/checkout@main
+
+       - name: Restore Cache 
+         uses: actions/cache@v2
+         id: cache
+         with:
+            path: |
+              ./HelenTraining/Datasets/
+            key: ${{ runner.os }}-hln-${{ hashFiles('**/*.zip') }}
+            restore-keys: |
+              ${{ runner.os }}-helen-
+
+       - name: Pull Datasets
+         if: steps.cache.outputs.cache-hit != 'true'
+         run: |
+           mkdir Datasets
+           cd Datasets
+           curl.exe -LJO -H "Accept: application/octet-stream" http://www.ifp.illinois.edu/~vuongle2/helen/data/annotation.zip --output annontation.zip 
+           curl.exe -LJO -H "Accept: application/octet-stream"  http://www.ifp.illinois.edu/~vuongle2/helen/data/helen_1.zip --output helen_1.zip 
+           curl.exe -LJO -H "Accept: application/octet-stream"  http://www.ifp.illinois.edu/~vuongle2/helen/data/helen_2.zip --output helen_2.zip 
+           curl.exe -LJO -H "Accept: application/octet-stream"  http://www.ifp.illinois.edu/~vuongle2/helen/data/helen_3.zip --output helen_3.zip 
+           curl.exe -LJO -H "Accept: application/octet-stream"  http://www.ifp.illinois.edu/~vuongle2/helen/data/helen_4.zip --output helen_4.zip 
+           curl.exe -LJO -H "Accept: application/octet-stream"  http://www.ifp.illinois.edu/~vuongle2/helen/data/helen_5.zip --output helen_5.zip 
+         working-directory: HelenTraining
+         shell: pwsh
+
+       - name: .NET Restore
+         run: dotnet restore 
+
+       - name: Run .NET Build and copy DlibDotNetNative DLLs
+         run: |
+           dotnet build -c Release
+           curl -L https://chinodesuuu.keybase.pub/DlibDotNetDLLs.zip?dl=1 --output DlibDotNetDLLs.zip
+           Expand-Archive .\DlibDotNetDLLs.zip .\bin\Release\netcoreapp2.0\
+         working-directory: HelenTraining
+         shell: pwsh
+      
+       - name: Prepare training data
+         run: |
+          mkdir models
+          curl -L https://chinodesuuu.keybase.pub/ml_datasets/helen_predictors.zip?dl=1 --output helen_predictors.zip
+          Expand-Archive -Force helen_predictors.zip .\models\
+          Copy-item -Force -Recurse -Verbose Datasets\* -Destination $PWD
+          dotnet run -c Release -- generate -m "models" -p 50
+         working-directory: HelenTraining
+
+       - name: Train
+         run: dotnet run -c Release -- train -x "helen\helen-dataset.xml" -t 8
+         working-directory: HelenTraining
+
+       - name: Upload Dataset results
+         uses: actions/upload-artifact@master
+         with:
+            name: dataset-helen
+            path: |
+              ./HelenTraining/models/
+              ./HelenTraining/helen/helen-dataset.dat
+
+       - name: Execute SSH Debug
+         if: ${{ failure() }} 
+         uses: mxschmitt/action-tmate@master
+         with:
+              sudo: true
          timeout-minutes: 120
