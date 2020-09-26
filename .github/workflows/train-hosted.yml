@@ -96,17 +96,17 @@ jobs:
          run: dotnet restore 
 
        - name: Pull Datasets
-         if: steps.cache.outputs.cache-hit != 'true'
+#         if: steps.cache.outputs.cache-hit != 'true'
          run: |
            mkdir Datasets
            cd Datasets
-           curl -L http://www.ifp.illinois.edu/~vuongle2/helen/data/annotation.zip --output annontation.zip
-           curl -L http://www.ifp.illinois.edu/~vuongle2/helen/data/helen_1.zip --output helen_1.zip
-           curl -L http://www.ifp.illinois.edu/~vuongle2/helen/data/helen_2.zip --output helen_2.zip
-           curl -L http://www.ifp.illinois.edu/~vuongle2/helen/data/helen_3.zip --output helen_3.zip
-           curl -L http://www.ifp.illinois.edu/~vuongle2/helen/data/helen_4.zip --output helen_4.zip
-           curl -L http://www.ifp.illinois.edu/~vuongle2/helen/data/helen_5.zip --output helen_5.zip
-           curl -L https://chinodesuuu.keybase.pub/ml_datasets/helen_predictors.zip?dl=1 --output helen_predictors.zip
+           curl.exe -LJO -H "Accept: application/octet-stream" http://www.ifp.illinois.edu/~vuongle2/helen/data/annotation.zip --output annontation.zip --silent
+           curl.exe -LJO -H "Accept: application/octet-stream"  http://www.ifp.illinois.edu/~vuongle2/helen/data/helen_1.zip --output helen_1.zip --silent
+           curl.exe -LJO -H "Accept: application/octet-stream"  http://www.ifp.illinois.edu/~vuongle2/helen/data/helen_2.zip --output helen_2.zip --silent
+           curl.exe -LJO -H "Accept: application/octet-stream"  http://www.ifp.illinois.edu/~vuongle2/helen/data/helen_3.zip --output helen_3.zip --silent
+           curl.exe -LJO -H "Accept: application/octet-stream"  http://www.ifp.illinois.edu/~vuongle2/helen/data/helen_4.zip --output helen_4.zip --silent
+           curl.exe -LJO -H "Accept: application/octet-stream"  http://www.ifp.illinois.edu/~vuongle2/helen/data/helen_5.zip --output helen_5.zip --silent
+           curl.exe -LJO -H "Accept: application/octet-stream"  https://chinodesuuu.keybase.pub/ml_datasets/helen_predictors.zip?dl=1 --output helen_predictors.zip --silent
          working-directory: HelenTraining
          shell: pwsh
       
