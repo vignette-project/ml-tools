@@ -20,7 +20,7 @@ jobs:
          with:
             path: |
               ./HeadPoseTraining/Dataset/
-            key: ${{ runner.os }}-300wlp-${{ hashFiles('**/**.*') }}
+            key: ${{ runner.os }}-300wlp-${{ hashFiles('**/*.txt') }}
             restore-keys: |
               ${{ runner.os }}-300wlp-
 
