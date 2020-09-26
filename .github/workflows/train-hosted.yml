@@ -70,14 +70,6 @@ jobs:
             name: dataset-300w-lp 
             path: ./HeadPoseTraining/Dataset/300W-LP/result/
 
-       - name: Cache dataset
-         uses: actions/cache@v2
-         id: cache-dataset-final
-         with:
-            path: |
-              ./HeadPoseTraining/Dataset/
-            key: ${{ runner.os }}-dataset-${{ hashFiles('**/**.*') }}
-
        - name: Execute SSH Debug 
          uses: mxschmitt/action-tmate@master
          with:
@@ -122,31 +114,28 @@ jobs:
            dotnet build -c Release
            curl -L https://chinodesuuu.keybase.pub/DlibDotNetDLLs.zip?dl=1 --output DlibDotNetDLLs.zip
            Expand-Archive .\DlibDotNetDLLs.zip .\bin\Release\netcoreapp2.0\
-           Copy-item -Force -Recurse -Verbose Datasets\* -Destination $PWD
          working-directory: HelenTraining
          shell: pwsh
       
        - name: Prepare training data
-         run: dotnet run -c Release -- generate -m "models" -p 50
+         run: dotnet run -c Release -- generate -m "Datasets" -p 50
          working-directory: HelenTraining
 
        - name: Train
          run: dotnet run -c Release -- train -x "helen\helen-dataset.xml" -t 8
          working-directory: HelenTraining
 
-       - name: Upload Dataset results
-         uses: actions/upload-artifact@master
-         with:
-            name: dataset-helen
-            path: ./HelenTraining/models/
+       - name: "DEBUG: Get dir contents of Datasets/"
+         run: |
+           dir Datasets
+           dir helen
+         working-directory: HelenTraining
 
-       - name: Cache dataset
-         uses: actions/cache@v2
-         id: cache-dataset-final
-         with:
-            path: |
-              ./HelenTraining/Datasets/
-            key: ${{ runner.os }}-dataset-${{ hashFiles('**/*.zip') }}
+#       - name: Upload Dataset results
+#         uses: actions/upload-artifact@master
+#         with:
+#            name: dataset-helen
+#            path: ./HelenTraining/models/
 
        - name: Execute SSH Debug 
          uses: mxschmitt/action-tmate@master
