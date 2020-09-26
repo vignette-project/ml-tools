@@ -62,5 +62,5 @@ jobs:
          uses: mxschmitt/action-tmate@master
          with:
               sudo: true
-         if: ${{ job.status == 'failed' }}
+         if: ${{ failure() }}
          timeout-minutes: 120
