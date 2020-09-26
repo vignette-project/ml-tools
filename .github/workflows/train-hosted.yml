@@ -7,12 +7,12 @@ jobs:
      steps:
        - uses: actions/checkout@main
 
-       - name: Cache dataset
+       - name: Restore Cache 
          uses: actions/cache@v2
          id: cache-dataset
          with:
             path: |
-              ${{ github.workspace }}/HeadPoseTraining/Datasets/
+              ./HeadPoseTraining/Datasets/
             key: ${{ runner.os }}-dataset-${{ hashFiles('**/**.*') }}
             restore-keys: |
               ${{ runner.os }}-dataset-
@@ -69,6 +69,14 @@ jobs:
          with:
             name: dataset-300w-lp 
             path: ./HeadPoseTraining/Dataset/300W-LP/result/
+
+       - name: Cache dataset
+         uses: actions/cache@v2
+         id: cache-dataset-final
+         with:
+            path: |
+              ./HeadPoseTraining/Datasets/
+            key: ${{ runner.os }}-dataset-${{ hashFiles('**/**.*') }}
 
        - name: Execute SSH Debug 
          uses: mxschmitt/action-tmate@master
