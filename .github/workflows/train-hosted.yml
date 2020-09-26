@@ -12,7 +12,7 @@ jobs:
          id: cache-dataset
          with:
             path: |
-              ./HeadPoseTraining/Datasets/
+              ./HeadPoseTraining/Dataset/
             key: ${{ runner.os }}-dataset-${{ hashFiles('**/**.*') }}
             restore-keys: |
               ${{ runner.os }}-dataset-
@@ -75,8 +75,78 @@ jobs:
          id: cache-dataset-final
          with:
             path: |
-              ./HeadPoseTraining/Datasets/
+              ./HeadPoseTraining/Dataset/
             key: ${{ runner.os }}-dataset-${{ hashFiles('**/**.*') }}
+
+       - name: Execute SSH Debug 
+         uses: mxschmitt/action-tmate@master
+         with:
+              sudo: true
+         if: ${{ failure() }}
+         timeout-minutes: 120
+
+  train_helen:
+     runs-on: windows-latest
+     steps:
+       - uses: actions/checkout@main
+
+       - name: Restore Cache 
+         uses: actions/cache@v2
+         id: cache-dataset
+         with:
+            path: |
+              ./HelenTraining/Datasets/
+            key: ${{ runner.os }}-dataset-${{ hashFiles('**/*.zip') }}
+            restore-keys: |
+              ${{ runner.os }}-dataset-
+
+       - name: .NET Restore
+         run: dotnet restore 
+
+       - name: Pull Datasets
+         if: steps.cache-dataset.cache-hit != 'true'
+         run: |
+           mkdir Datasets
+           cd Datasets
+           curl -L http://www.ifp.illinois.edu/~vuongle2/helen/data/annotation.zip --output annontation.zip
+           curl -L http://www.ifp.illinois.edu/~vuongle2/helen/data/helen_1.zip --output helen_1.zip
+           curl -L http://www.ifp.illinois.edu/~vuongle2/helen/data/helen_2.zip --output helen_2.zip
+           curl -L http://www.ifp.illinois.edu/~vuongle2/helen/data/helen_3.zip --output helen_3.zip
+           curl -L http://www.ifp.illinois.edu/~vuongle2/helen/data/helen_4.zip --output helen_4.zip
+           curl -L http://www.ifp.illinois.edu/~vuongle2/helen/data/helen_5.zip --output helen_5.zip
+         working-directory: HelenTraining
+         shell: pwsh
+      
+       - name: Run .NET Build and copy DlibDotNetNative DLLs
+         run: |
+           dotnet build -c Release
+           curl -L https://chinodesuuu.keybase.pub/DlibDotNetDLLs.zip?dl=1 --output DlibDotNetDLLs.zip
+           Expand-Archive .\DlibDotNetDLLs.zip .\bin\Release\netcoreapp2.0\
+           Copy-item -Force -Recurse -Verbose Datasets\* -Destination $PWD
+         working-directory: HelenTraining
+         shell: pwsh
+      
+       - name: Prepare training data
+         run: dotnet run -c Release -- generate -m "models" -p 50
+         working-directory: HelenTraining
+
+       - name: Train
+         run: dotnet run -c Release -- train -x "helen\helen-dataset.xml" -t 8
+         working-directory: HelenTraining
+
+       - name: Upload Dataset results
+         uses: actions/upload-artifact@master
+         with:
+            name: dataset-helen
+            path: ./HelenTraining/models/
+
+       - name: Cache dataset
+         uses: actions/cache@v2
+         id: cache-dataset-final
+         with:
+            path: |
+              ./HelenTraining/Datasets/
+            key: ${{ runner.os }}-dataset-${{ hashFiles('**/*.zip') }}
 
        - name: Execute SSH Debug 
          uses: mxschmitt/action-tmate@master
