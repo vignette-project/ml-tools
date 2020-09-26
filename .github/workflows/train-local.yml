@@ -1,5 +1,7 @@
 name: "Train Models - Volunteer"
-on: push
+on: 
+  schedule:
+      - cron:  '0 0 * * *'
 
 jobs:
   train_headpose:
