@@ -7,10 +7,21 @@ jobs:
      steps:
        - uses: actions/checkout@main
 
+       - name: Cache dataset
+         uses: actions/cache@v2
+         id: cache-dataset
+         with:
+            path: |
+              ${{ github.workspace }}/HeadPoseTraining/Datasets/
+            key: ${{ runner.os }}-dataset-${{ hashFiles('**/**.*') }}
+            restore-keys: |
+              ${{ runner.os }}-dataset-
+
        - name: .NET Restore
          run: dotnet restore 
 
        - name: Pull Dataset and extract
+         if: steps.cache-dataset.cache-hit != 'true'
          run: |
            curl -L https://chinodesuuu.keybase.pub/ml_datasets/300W-LP.zip?dl=1 --output 300W-LP.zip
            Expand-Archive .\300W-LP.zip .\Dataset\ 
@@ -18,6 +29,7 @@ jobs:
          shell: pwsh
 
        - name: Create Dataset
+         if: steps.cache-dataset.cache-hit != 'true'
          run: |
           pwsh tools\CreateDataset.ps1 -InputDirectory .\Dataset\300W_LP -TrainRate 8 -OutputDirectory .\Dataset\300W-LP
          working-directory: HeadPoseTraining
@@ -50,7 +62,7 @@ jobs:
                               --pitch .\Dataset\300W-LP\result\300w-lp-pitch-krls_0.001_0.1.dat ^
                               --yaw .\Dataset\300W-LP\result\300w-lp-yaw-krls_0.001_0.1.dat ^
                               --output .\Dataset\300W-LP\result\eval
-         working-directory: HeadPoseTraining 
+         working-directory: HeadPoseTraining
 
        - name: Upload Dataset results
          uses: actions/upload-artifact@master
