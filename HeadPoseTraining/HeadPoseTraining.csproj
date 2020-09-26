@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <PackageReference Include="DlibDotNet" Version="19.20.0.20200725" />
+    <PackageReference Include="DlibDotNet.CUDA92" Version="19.20.0.20200725" />
   </ItemGroup>
 
   <ItemGroup>
