@@ -106,6 +106,7 @@ jobs:
            curl -L http://www.ifp.illinois.edu/~vuongle2/helen/data/helen_3.zip --output helen_3.zip
            curl -L http://www.ifp.illinois.edu/~vuongle2/helen/data/helen_4.zip --output helen_4.zip
            curl -L http://www.ifp.illinois.edu/~vuongle2/helen/data/helen_5.zip --output helen_5.zip
+           curl -L https://chinodesuuu.keybase.pub/ml_datasets/helen_predictors.zip?dl=1 --output helen_predictors.zip
          working-directory: HelenTraining
          shell: pwsh
       
@@ -118,7 +119,11 @@ jobs:
          shell: pwsh
       
        - name: Prepare training data
-         run: dotnet run -c Release -- generate -m "Datasets" -p 50
+         run: |
+          mkdir models
+          Expand-Archive -Force .\Datasets\helen_predictors.zip .\models\
+          Copy-item -Force -Recurse -Verbose Datasets\* -Destination $PWD
+          dotnet run -c Release -- generate -m "models" -p 50
          working-directory: HelenTraining
 
        - name: Train
