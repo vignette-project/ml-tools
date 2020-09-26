@@ -7,6 +7,9 @@ jobs:
      steps:
        - uses: actions/checkout@main
 
+       - name: .NET Restore
+         run: dotnet restore 
+
        - name: Pull Dataset and extract
          run: |
            curl -L https://chinodesuuu.keybase.pub/ml_datasets/300W-LP.zip?dl=1 --output 300W-LP.zip
@@ -16,7 +19,7 @@ jobs:
 
        - name: Create Dataset
          run: |
-          pwsh tools\CreateDataset.ps1 -InputDirectory .\Dataset\300W-LP -TrainRate 8 -OutputDirectory .\Dataset\300W-LP
+          pwsh tools\CreateDataset.ps1 -InputDirectory .\Dataset\300W_LP -TrainRate 8 -OutputDirectory .\Dataset\300W-LP
          working-directory: HeadPoseTraining
          shell: pwsh
       
@@ -40,9 +43,9 @@ jobs:
        # This is to test if Model was properly trained.
        - name: Perform Dataset Evaluation
          run: |
-           dotnet run -c Release -- eval --image .\Dataset\300W-LP\AFW\AFW_134212_1_4.jpg ^
-                              --mat .\Dataset\300W-LP\AFW\AFW_134212_1_4.mat ^
-                              --landmark .\Dataset\300W-LP\landmarks\IBUG\IBUG_image_003_1_5_pts.mat ^
+           dotnet run -c Release -- eval --image .\Dataset\300W_LP\AFW\AFW_134212_1_4.jpg ^
+                              --mat .\Dataset\300W_LP\AFW\AFW_134212_1_4.mat ^
+                              --landmark .\Dataset\300W_LP\landmarks\IBUG\IBUG_image_003_1_5_pts.mat ^
                               --roll .\Dataset\300W-LP\result\300w-lp-roll-krls_0.001_0.1.dat ^
                               --pitch .\Dataset\300W-LP\result\300w-lp-pitch-krls_0.001_0.1.dat ^
                               --yaw .\Dataset\300W-LP\result\300w-lp-yaw-krls_0.001_0.1.dat ^

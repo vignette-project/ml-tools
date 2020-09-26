@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\DlibDotNet\src\DlibDotNet\DlibDotNet.csproj" />
+    <PackageReference Include="DlibDotNet" Version="19.20.0.20200725" />
   </ItemGroup>
 
   <ItemGroup>
